@@ -23,7 +23,7 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
-        if ((Input.GetKeyDown(KeyCode.X) | Input.GetButtonDown("Action")) & !isCarry)
+        if ((Input.GetKeyDown(KeyCode.X) || Input.GetButtonDown("Action")) && !isCarry)
         {
             curCapsule.transform.SetParent(Capsulepos.transform);
             Rigidbody rig = curCapsule.GetComponent<Rigidbody>();
@@ -34,14 +34,14 @@ public class PlayerController : MonoBehaviour
             rig.useGravity = false;
             isCarry = true;
         }
-        else if ((Input.GetKeyUp(KeyCode.X) | Input.GetButtonUp("Action")) & isCarry)
+        else if ((Input.GetKeyUp(KeyCode.X) || Input.GetButtonUp("Action")) && isCarry)
         {
             curCapsule.transform.parent = null;
             //curCapsule.GetComponent<CapsuleCollider>().enabled = true;
             curCapsule.GetComponent<CapsuleCollider>().isTrigger = false;
             Rigidbody rig = curCapsule.GetComponent<Rigidbody>();
-            Rigidbody myrig = GetComponent<Rigidbody>();
-            rig.velocity = new Vector3(myrig.velocity.x, 1.0f, myrig.velocity.z);
+            Vector3 front = transform.forward * 5;
+            rig.velocity = front + new Vector3(0.0f, 5.0f, 0.0f);
             Debug.Log(rig.velocity);
             rig.useGravity = true;
             isCarry = false;
@@ -59,6 +59,14 @@ public class PlayerController : MonoBehaviour
         if (collision.transform.tag == "Capsule")
         {
             curCapsule = collision.gameObject;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject == curCapsule && !isCarry)
+        {
+            curCapsule = null;
         }
     }
 }
