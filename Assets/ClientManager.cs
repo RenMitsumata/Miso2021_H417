@@ -57,31 +57,23 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
 
 
-    // Start is called before the first frame update
+    // 生成された後、最初のフレームで呼び出される関数（MonoBehaviorクラスのオーバーライド）
     void Start()
     {
 
-        //PhotonNetwork.ConnectToRegion("jp");
-        //bool isConnected = PhotonNetwork.ConnectUsingSettings();
+        // 認証情報（ユーザーIDなど）を生成
         PhotonNetwork.AuthValues = new AuthenticationValues("fun2");
+
+        // マスターサーバーに接続
         bool isConnected = PhotonNetwork.ConnectToMaster("18.183.186.148", 5055, "0");
 
-
-        //bool isConnected = PhotonNetwork.ConnectToMaster("218.110.167.198", 4530, "0");
-        //bool isConnected = PhotonNetwork.ConnectToMaster("192.168.1.5", 4530, "0");
-        //LoadBalancingClient client = PhotonNetwork.NetworkingClient;
-        //client.ConnectToMasterServer();
-        //PhotonNetwork.ConnectToMaster("18.183.239.71", 4530, "1ffb49d8-8f8d-407a-9ed6-c4ae6a3c569f");
-
+        if (isConnected == false)
+        {
+            // 接続できなかったときの処理
+        }
     }
 
-    void OnGUI()
-    {
-        //ログインの状態を画面上に出力
-        //GUILayout.Label(PhotonNetwork.NetworkClientState.ToString());
-        //GUILayout.Label(PhotonNetwork.CountOfPlayers.ToString());
-    }
-
+    // ルームリストがアップデートされたとき（誰かがロビーに入ってきたときなど）に呼び出されるコールバック関数
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         /*
@@ -96,37 +88,12 @@ public class ClientManager : MonoBehaviourPunCallbacks
     }
 
 
-
+    // 更新関数（MonoBehaviorクラスのオーバーライド）
     private void Update()
     {
         statusNum.text = PhotonNetwork.CountOfPlayersOnMaster + "/16 Players are waiting...";
 
-        /*
-        // デバッグ用
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            RoomOptions ro = new RoomOptions
-            {
-                MaxPlayers = 10,
-                IsOpen = true,
-                IsVisible = true,
-                PublishUserId = true
-            };
 
-            Player[] player = PhotonNetwork.PlayerList;
-            string[] playerName = new string[player.Length];
-            for (int i = 0; i < player.Length; i++)
-            {
-                playerName[i] = player[i].UserId;
-                Debug.Log(playerName[i]);
-            }
-
-            PhotonNetwork.JoinOrCreateRoom("room", ro, TypedLobby.Default, playerName);
-            //PhotonNetwork.CreateRoom("myroom", ro);
-            //photonView.RPC("JoinRoom", RpcTarget.Others);
-
-        }
-        */
         if (Input.GetKeyDown(KeyCode.Return))
         {
             Debug.Log(PhotonNetwork.CurrentRoom.PlayerCount);
@@ -138,9 +105,10 @@ public class ClientManager : MonoBehaviourPunCallbacks
         }
 
     }
-    // ロビーに入った時に呼び出される
+    // ロビーに入った時に呼び出される関数
     public override void OnJoinedLobby()
     {
+        // 入室処理など
 
         RoomOptions ro = new RoomOptions
         {
@@ -159,7 +127,7 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
 
 
-    // マスターサーバーに接続時に呼び出される
+    // マスターサーバーに接続時に呼び出される関数
     public override void OnConnectedToMaster()
     {
 
@@ -168,46 +136,16 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
         status.text = "Waiting...";
 
-        // "room"という名前のルームに参加する（ルームが無ければ作成してから参加する）
-        //PhotonNetwork.JoinOrCreateRoom("room", new RoomOptions(), TypedLobby.Default);
-
-        //
-        //PhotonNetwork.SendRate = 10;
-        //PhotonNetwork.SerializationRate = 10;
-
-        // ロビーに入る？
-        //Debug.Log(PhotonNetwork.ServerAddress);
-
-
-        if (PhotonNetwork.AuthValues == null)
-        {
-            Debug.Log("NULLだよ！！！");
-        }
-        else
-            UserID = PhotonNetwork.AuthValues.UserId;
-        Debug.Log(UserID);
 
     }
 
-    // ルームに入室後に呼び出される
+    // ルームに入室したときに呼び出される関数
     public override void OnJoinedRoom()
     {
         photonView.RPC("InstantiatePlayer", RpcTarget.All);
 
         Debug.Log(PhotonNetwork.CountOfPlayersInRooms);
-        //InstantiatePlayer();
-        /*
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
-        {
-            PhotonNetwork.CurrentRoom.MaxPlayers = 4;
-        }
 
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
-        {
-            Debug.Log("召喚");
-            photonView.RPC("InstantiatePlayer", RpcTarget.All);
-        }
-        */
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
