@@ -63,7 +63,8 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
         //PhotonNetwork.ConnectToRegion("jp");
         //bool isConnected = PhotonNetwork.ConnectUsingSettings();
-        bool isConnected = PhotonNetwork.ConnectToMaster("52.194.184.161", 5055, "0");
+        PhotonNetwork.AuthValues = new AuthenticationValues("fun2");
+        bool isConnected = PhotonNetwork.ConnectToMaster("18.183.186.148", 5055, "0");
 
 
         //bool isConnected = PhotonNetwork.ConnectToMaster("218.110.167.198", 4530, "0");
@@ -71,7 +72,6 @@ public class ClientManager : MonoBehaviourPunCallbacks
         //LoadBalancingClient client = PhotonNetwork.NetworkingClient;
         //client.ConnectToMasterServer();
         //PhotonNetwork.ConnectToMaster("18.183.239.71", 4530, "1ffb49d8-8f8d-407a-9ed6-c4ae6a3c569f");
-
 
     }
 
@@ -127,11 +127,17 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
         }
         */
-
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            Debug.Log(PhotonNetwork.CurrentRoom.PlayerCount);
+            Dictionary<int, Player> d = PhotonNetwork.CurrentRoom.Players;
+            foreach (var a in d)
+            {
+                Debug.Log(a.Value.UserId);
+            }
+        }
 
     }
-
-
     // ロビーに入った時に呼び出される
     public override void OnJoinedLobby()
     {
@@ -142,6 +148,7 @@ public class ClientManager : MonoBehaviourPunCallbacks
             IsOpen = true,
             IsVisible = true,
             PublishUserId = true
+
         };
 
 
@@ -149,6 +156,7 @@ public class ClientManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinOrCreateRoom("room", ro, TypedLobby.Default);
 
     }
+
 
 
     // マスターサーバーに接続時に呼び出される
@@ -160,7 +168,6 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
         status.text = "Waiting...";
 
-
         // "room"という名前のルームに参加する（ルームが無ければ作成してから参加する）
         //PhotonNetwork.JoinOrCreateRoom("room", new RoomOptions(), TypedLobby.Default);
 
@@ -171,7 +178,13 @@ public class ClientManager : MonoBehaviourPunCallbacks
         // ロビーに入る？
         //Debug.Log(PhotonNetwork.ServerAddress);
 
-        UserID = PhotonNetwork.AuthValues.UserId;
+
+        if (PhotonNetwork.AuthValues == null)
+        {
+            Debug.Log("NULLだよ！！！");
+        }
+        else
+            UserID = PhotonNetwork.AuthValues.UserId;
         Debug.Log(UserID);
 
     }
@@ -180,6 +193,7 @@ public class ClientManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         photonView.RPC("InstantiatePlayer", RpcTarget.All);
+
         Debug.Log(PhotonNetwork.CountOfPlayersInRooms);
         //InstantiatePlayer();
         /*
@@ -194,7 +208,6 @@ public class ClientManager : MonoBehaviourPunCallbacks
             photonView.RPC("InstantiatePlayer", RpcTarget.All);
         }
         */
-
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
