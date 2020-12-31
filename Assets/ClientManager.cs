@@ -6,7 +6,8 @@ using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
 
-public class ClientManager : MonoBehaviourPunCallbacks
+
+public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     [SerializeField]
     private GameObject basePlayer;
@@ -29,32 +30,35 @@ public class ClientManager : MonoBehaviourPunCallbacks
 
     private string UserID;
 
+    public enum EventCode
+    {
+        JoinRoom = 0x01
+    };
 
-    [PunRPC]
+
     void InstantiatePlayer()
     {
-
         GameObject insPlayer = PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+
         Camera curCam = Camera.current;
         Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
         curCam.enabled = false;
         Destroy(curCam.gameObject);
         plyCam.enabled = true;
-        pv = insPlayer.GetComponent<PhotonView>();
-        rig = insPlayer.GetComponent<Rigidbody>();
         Destroy(Panel);
         Destroy(status.gameObject);
         Destroy(statusNum.gameObject);
+        pv = insPlayer.GetComponent<PhotonView>();
+        rig = insPlayer.GetComponent<Rigidbody>();
 
     }
+
 
     [PunRPC]
-    void JoinRoom()
+    public void InstantiateOthers()
     {
-        PhotonNetwork.JoinRandomRoom();
-
+        //PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
     }
-
 
 
     // 生成された後、最初のフレームで呼び出される関数（MonoBehaviorクラスのオーバーライド）
@@ -62,7 +66,7 @@ public class ClientManager : MonoBehaviourPunCallbacks
     {
 
         // 認証情報（ユーザーIDなど）を生成
-        PhotonNetwork.AuthValues = new AuthenticationValues("fun2");
+        PhotonNetwork.AuthValues = new AuthenticationValues("fun");
 
         // マスターサーバーに接続
         bool isConnected = PhotonNetwork.ConnectToMaster("18.183.186.148", 5055, "0");
@@ -142,15 +146,33 @@ public class ClientManager : MonoBehaviourPunCallbacks
     // ルームに入室したときに呼び出される関数
     public override void OnJoinedRoom()
     {
-        photonView.RPC("InstantiatePlayer", RpcTarget.All);
+        //photonView.RPC("InstantiatePlayer", RpcTarget.All);
 
-        Debug.Log(PhotonNetwork.CountOfPlayersInRooms);
+        // 自分をスポーン
+        InstantiatePlayer();
+
+        //photonView.RPC("InstantiateOthers", RpcTarget.Others);
+
+        // 入室したというイベントを送信
+        //RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+        //SendOptions sendOptions = new SendOptions { Reliability = true };
+        //PhotonNetwork.RaiseEvent((byte)EventCode.JoinRoom, null, raiseEventOptions, sendOptions);
+
+        //Debug.Log(PhotonNetwork.CountOfPlayersInRooms);
 
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         Debug.Log("入室に失敗\nエラーコード:" + returnCode + "\nメッセージ:" + message);
+    }
+
+    // イベントを受信した時の関数
+    public void OnEvent(EventData ed)
+    {
+
+
+
     }
 
 }
