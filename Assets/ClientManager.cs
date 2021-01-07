@@ -29,6 +29,7 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private Text statusNum;
 
     private string UserID;
+    private PlayerController pc;
 
     public enum EventCode
     {
@@ -36,29 +37,26 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
     };
 
 
-    void InstantiatePlayer()
+    void InstantiatePlayer(ClientManager cl)
     {
-        GameObject insPlayer = PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+        insPlayer = PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+        if (cl == this)
+        {
+            pc = insPlayer.GetComponentInChildren<PlayerController>();
+            pc.SetMine();
+            Camera curCam = Camera.current;
+            Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
+            curCam.enabled = false;
+            Destroy(curCam.gameObject);
+            plyCam.enabled = true;
+            Destroy(Panel);
+            Destroy(status.gameObject);
+            Destroy(statusNum.gameObject);
+        }
 
-        Camera curCam = Camera.current;
-        Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
-        curCam.enabled = false;
-        Destroy(curCam.gameObject);
-        plyCam.enabled = true;
-        Destroy(Panel);
-        Destroy(status.gameObject);
-        Destroy(statusNum.gameObject);
-        pv = insPlayer.GetComponent<PhotonView>();
-        rig = insPlayer.GetComponent<Rigidbody>();
 
     }
 
-
-    [PunRPC]
-    public void InstantiateOthers()
-    {
-        //PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
-    }
 
 
     // 生成された後、最初のフレームで呼び出される関数（MonoBehaviorクラスのオーバーライド）
@@ -66,7 +64,9 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
     {
 
         // 認証情報（ユーザーIDなど）を生成
-        PhotonNetwork.AuthValues = new AuthenticationValues("fun");
+        string str = Time.frameCount.ToString() + Random.Range(0.0f, 150.0f).ToString();
+        PhotonNetwork.AuthValues = new AuthenticationValues(str);
+        PhotonNetwork.AutomaticallySyncScene = true;
 
         // マスターサーバーに接続
         bool isConnected = PhotonNetwork.ConnectToMaster("18.183.186.148", 5055, "0");
@@ -91,6 +91,11 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
         */
     }
 
+    public void FixedUpdate()
+    {
+
+
+    }
 
     // 更新関数（MonoBehaviorクラスのオーバーライド）
     private void Update()
@@ -98,15 +103,7 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
         statusNum.text = PhotonNetwork.CountOfPlayersOnMaster + "/16 Players are waiting...";
 
 
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            Debug.Log(PhotonNetwork.CurrentRoom.PlayerCount);
-            Dictionary<int, Player> d = PhotonNetwork.CurrentRoom.Players;
-            foreach (var a in d)
-            {
-                Debug.Log(a.Value.UserId);
-            }
-        }
+
 
     }
     // ロビーに入った時に呼び出される関数
@@ -149,16 +146,7 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
         //photonView.RPC("InstantiatePlayer", RpcTarget.All);
 
         // 自分をスポーン
-        InstantiatePlayer();
-
-        //photonView.RPC("InstantiateOthers", RpcTarget.Others);
-
-        // 入室したというイベントを送信
-        //RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
-        //SendOptions sendOptions = new SendOptions { Reliability = true };
-        //PhotonNetwork.RaiseEvent((byte)EventCode.JoinRoom, null, raiseEventOptions, sendOptions);
-
-        //Debug.Log(PhotonNetwork.CountOfPlayersInRooms);
+        InstantiatePlayer(this);
 
     }
 

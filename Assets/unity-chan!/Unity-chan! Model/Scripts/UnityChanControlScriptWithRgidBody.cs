@@ -44,6 +44,8 @@ namespace UnityChan
 
         private GameObject cameraObject;    // メインカメラへの参照
 
+        public bool isMine { get; set; } = false;
+
         // アニメーター各ステートへの参照
         static int idleState = Animator.StringToHash("Base Layer.Idle");
         static int locoState = Animator.StringToHash("Base Layer.Locomotion");
@@ -63,12 +65,22 @@ namespace UnityChan
             // CapsuleColliderコンポーネントのHeight、Centerの初期値を保存する
             orgColHight = col.height;
             orgVectColCenter = col.center;
+
+            if (!isMine)
+            {
+                Destroy(transform.Find("CamPos").gameObject);
+            }
         }
 
 
         // 以下、メイン処理.リジッドボディと絡めるので、FixedUpdate内で処理を行う.
         void FixedUpdate()
         {
+            if (!isMine)
+            {
+                return;
+            }
+
             float h = Input.GetAxis("Horizontal");              // 入力デバイスの水平軸をhで定義
             float v = Input.GetAxis("Vertical");                // 入力デバイスの垂直軸をvで定義
             anim.SetFloat("Speed", v);                          // Animator側で設定している"Speed"パラメタにvを渡す
@@ -109,11 +121,13 @@ namespace UnityChan
             }
 
 
+
             // 上下のキー入力でキャラクターを移動させる
             transform.localPosition += velocity * Time.fixedDeltaTime;
 
             // 左右のキー入力でキャラクタをY軸で旋回させる
             transform.Rotate(0, h * rotateSpeed, 0);
+
 
 
             // 以下、Animatorの各ステート中での処理
