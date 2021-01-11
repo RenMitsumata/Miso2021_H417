@@ -27,6 +27,8 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private Text status;
     [SerializeField]
     private Text statusNum;
+    [SerializeField]
+    private string MasterServerAdd;
 
     private string UserID;
     private PlayerController pc;
@@ -39,10 +41,33 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
     void InstantiatePlayer(ClientManager cl)
     {
-        insPlayer = PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+
+        int randomNum = Random.Range(0, 3);
+
+        switch (randomNum)
+        {
+            case 0:
+                insPlayer = PhotonNetwork.Instantiate("chara_blue", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+                break;
+            case 1:
+                insPlayer = PhotonNetwork.Instantiate("chara_green", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+                break;
+            case 2:
+                insPlayer = PhotonNetwork.Instantiate("chara_red", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+                break;
+            case 3:
+                insPlayer = PhotonNetwork.Instantiate("chara_yellow", new Vector3(Random.Range(-5.0f, 5.0f), 2.0f, Random.Range(-5.0f, 5.0f)), new Quaternion());
+                break;
+
+        }
+
+
+
+
         if (cl == this)
         {
-            pc = insPlayer.GetComponentInChildren<PlayerController>();
+            Debug.Log("俺だよ俺！！！");
+            pc = insPlayer.GetComponent<PlayerController>();
             pc.SetMine();
             Camera curCam = Camera.current;
             Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
@@ -52,6 +77,12 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
             Destroy(Panel);
             Destroy(status.gameObject);
             Destroy(statusNum.gameObject);
+        }
+        else
+        {
+            Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
+            GameObject go = plyCam.gameObject;
+            Destroy(go);
         }
 
 
@@ -69,7 +100,7 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
         PhotonNetwork.AutomaticallySyncScene = true;
 
         // マスターサーバーに接続
-        bool isConnected = PhotonNetwork.ConnectToMaster("18.183.186.148", 5055, "0");
+        bool isConnected = PhotonNetwork.ConnectToMaster(MasterServerAdd, 5055, "0");
 
         if (isConnected == false)
         {

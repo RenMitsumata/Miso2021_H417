@@ -24,6 +24,9 @@ public class GameTimer : MonoBehaviour
         seconds = (int)totalTime;
         timerText.text = "Time " + totalTime.ToString("f2");
 
-
+        if (totalTime < 60.0f)
+        {
+            totalTime += 240.0f;
+        }
     }
 }

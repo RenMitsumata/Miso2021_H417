@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private GameObject curCapsule;
     private GameObject enemy;
     private bool isCarry = false;
+    private bool isMine = false;
 
     public float forwardSpeed;
     public float backwardSpeed;
@@ -20,6 +21,11 @@ public class PlayerController : MonoBehaviour
     private float h;
     private float v;
     private Vector3 velocity;
+
+    private Animator animator;
+    private AnimatorStateInfo animatorStateInfoBase;
+    private AnimatorStateInfo animatorStateInfoCarry;
+    private Rigidbody rb;
 
     [PunRPC]
     public void CatchCapsule()
@@ -29,9 +35,21 @@ public class PlayerController : MonoBehaviour
         curCapsule.GetComponent<CapsuleCollider>().isTrigger = true;
         curCapsule.transform.SetParent(Capsulepos.transform);
         curCapsule.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+
+
+
+        Vector3 curRot = new Vector3(0.0f, 0.0f, 90.0f);
+        Quaternion quat = Quaternion.Euler(curRot);
+        curCapsule.transform.localRotation = quat;
+
+
         rig.velocity = Vector3.zero;
         rig.useGravity = false;
+        rig.freezeRotation = true;
+        rig.isKinematic = true;
         isCarry = true;
+        animator.SetBool("Carry", true);
+        animator.SetLayerWeight(1, 0.5f);
     }
 
 
@@ -50,8 +68,12 @@ public class PlayerController : MonoBehaviour
         rig.velocity = front + new Vector3(0.0f, 5.0f, 0.0f);
         Debug.Log(rig.velocity);
         rig.useGravity = true;
+        rig.freezeRotation = false;
+        rig.isKinematic = false;
         isCarry = false;
         curCapsule = null;
+        animator.SetBool("Carry", false);
+        animator.SetLayerWeight(1, 1.0f);
     }
 
 
@@ -61,7 +83,8 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -69,7 +92,61 @@ public class PlayerController : MonoBehaviour
     {
 
 
-        if ((Input.GetKeyDown(KeyCode.X) || Input.GetButtonDown("Action")))
+
+    }
+
+    private void FixedUpdate()
+    {
+        if (!rb)
+        {
+            return;
+        }
+        if (!isMine)
+        {
+            return;
+        }
+
+        animatorStateInfoBase = animator.GetCurrentAnimatorStateInfo(0);
+        animatorStateInfoCarry = animator.GetCurrentAnimatorStateInfo(1);
+
+        float h = Input.GetAxis("Horizontal");              // 入力デバイスの水平軸をhで定義
+        float v = Input.GetAxis("Vertical");                // 入力デバイスの垂直軸をvで定義
+
+        // 以下、キャラクターの移動処理
+        velocity = new Vector3(0, 0, v * 3);        // 上下のキー入力からZ軸方向の移動量を取得
+                                                    // キャラクターのローカル空間での方向に変換
+        velocity = transform.TransformDirection(velocity);
+
+
+        // 上下のキー入力でキャラクターを移動させる
+        transform.localPosition += velocity * Time.fixedDeltaTime;
+
+        // 左右のキー入力でキャラクタをY軸で旋回させる
+        transform.Rotate(0, h * 2, 0);
+
+
+        //rb.AddForce(10 * Physics.gravity, ForceMode.Acceleration);
+        //transform.Translate(transform.forward * Time.fixedDeltaTime);
+
+
+        // ここからアニメーション関係
+        string animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
+
+        Debug.Log(animName);
+
+        if (animName == "Idle" && v > 0.1f && !animator.IsInTransition(0))
+        {
+            animator.SetTrigger("Run");
+        }
+
+        else if (animName == "Running" && v < 0.1f && !animator.IsInTransition(0))
+        {
+            animator.SetTrigger("Idle");
+        }
+
+        animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
+
+        if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.X))
         {
             if (isCarry)
             {
@@ -84,20 +161,21 @@ public class PlayerController : MonoBehaviour
                 }
 
                 GetComponent<PhotonView>().RPC("CatchCapsule", RpcTarget.All);
+
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.F))
+        if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.F)) && animName == "Idle")
         {
+            animator.SetTrigger("Punch");
             if (enemy)
             {
                 enemy.GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All);
             }
         }
-    }
 
-    private void FixedUpdate()
-    {
+
+
 
     }
 
@@ -148,9 +226,6 @@ public class PlayerController : MonoBehaviour
 
     public void SetMine()
     {
-        GetComponent<UnityChan.UnityChanControlScriptWithRgidBody>().isMine = true;
+        isMine = true;
     }
-
-
-
 }
