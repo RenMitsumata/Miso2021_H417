@@ -16,11 +16,11 @@ MonoBehaviour:
     AppIdRealtime: 
     AppIdChat: 
     AppIdVoice: 
-    AppVersion: 
-    UseNameServer: 1
+    AppVersion: 0.5
+    UseNameServer: 0
     FixedRegion: 
-    Server: 
-    Port: 0
+    Server: 127.0.0.1
+    Port: 5055
     ProxyServer: 
     Protocol: 0
     EnableProtocolFallback: 1
@@ -34,5 +34,5 @@ MonoBehaviour:
   StartInOfflineMode: 0
   RpcList: []
   DisableAutoOpenWizard: 1
-  ShowSettings: 0
+  ShowSettings: 1
   DevRegionSetOnce: 0
