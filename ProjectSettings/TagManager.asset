@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Bullet
   - Capsule
+  - Stage
   layers:
   - Default
   - TransparentFX
