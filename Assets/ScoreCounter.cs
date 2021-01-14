@@ -7,6 +7,10 @@ public class ScoreCounter : MonoBehaviour
 
     private BoxCollider col;
     private int count;
+    [SerializeField]
+    private CapsuleObject.Belong_State myteam;
+    [SerializeField]
+    private ScoreManager scrMgr;
 
     // Start is called before the first frame update
     void Start()
@@ -25,18 +29,20 @@ public class ScoreCounter : MonoBehaviour
     {
         if (other.tag == "Capsule")
         {
-            count++;
-            Debug.Log("カウントアップ");
+            other.GetComponent<CapsuleObject>().state = myteam;
+            int num = other.GetComponent<CapsuleObject>().score;
+            for (int i = 0; i < num; i++)
+            {
+                scrMgr.UpdateScore(myteam);
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log(other.tag);
         if (other.tag == "Capsule")
         {
-            count--;
-            Debug.Log("カウントダウン");
+
         }
     }
 
