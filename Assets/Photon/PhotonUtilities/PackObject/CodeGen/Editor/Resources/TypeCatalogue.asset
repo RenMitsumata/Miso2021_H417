@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: TypeCatalogue
   m_EditorClassIdentifier: 
   catalogue:
-    keys:
-    - emotitron.TestPackObject
+    keys: []
     vals:
     - hashcode: 1161234830446200393
       filepath: Assets\Photon\PhotonUtilities\PackObject\_GeneratedPackExtensions\Pack_TestPackObject.cs
