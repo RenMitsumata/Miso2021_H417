@@ -60,10 +60,21 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 break;
 
         }
+        if (cl == this)
+        {
+            pc = insPlayer.GetComponent<PlayerController>();
+            pc.SetMine();
+            Camera curCam = Camera.current;
+            curCam.gameObject.transform.SetParent(insPlayer.transform.Find("CamPos").transform);
+            curCam.transform.localPosition = Vector3.zero;
+            curCam.transform.localRotation = Quaternion.identity;
+            Destroy(Panel);
+            Destroy(status.gameObject);
+            Destroy(statusNum.gameObject);
+        }
 
 
-
-
+        /*
         if (cl == this)
         {
             Debug.Log("俺だよ俺！！！");
@@ -80,11 +91,14 @@ public class ClientManager : MonoBehaviourPunCallbacks, IOnEventCallback
         }
         else
         {
+            Debug.Log("はい。");
             Camera plyCam = insPlayer.GetComponentInChildren<Camera>();
+            if (!plyCam) Debug.Log("ぬるっぽ");
             GameObject go = plyCam.gameObject;
+            if (!go) Debug.Log("ゆるぽっぽ");
             Destroy(go);
         }
-
+        */
 
     }
 

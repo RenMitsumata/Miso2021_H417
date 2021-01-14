@@ -7,6 +7,18 @@ using Photon.Realtime;
 
 public class PlayerController : MonoBehaviour
 {
+    struct ButtonStatus
+    {
+        public bool isTrigger { get; set; }
+        public bool isPress { get; set; }
+        public bool isRelease { get; set; }
+    }
+
+
+
+    [SerializeField]
+    private List<string> dic;
+
     [SerializeField]
     private GameObject Capsulepos;
 
@@ -21,6 +33,7 @@ public class PlayerController : MonoBehaviour
     private float h;
     private float v;
     private Vector3 velocity;
+    private ButtonStatus[] Buttons;
 
     private Animator animator;
     private AnimatorStateInfo animatorStateInfoBase;
@@ -85,49 +98,26 @@ public class PlayerController : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
+        Buttons = new ButtonStatus[dic.Count];
     }
 
     // Update is called once per frame
     void Update()
     {
+        // 入力軸の取得
+        h = Input.GetAxis("Horizontal");              // 入力デバイスの水平軸をhで定義
+        v = Input.GetAxis("Vertical");                // 入力デバイスの垂直軸をvで定義
 
-
-
-    }
-
-    private void FixedUpdate()
-    {
-        if (!rb)
+        // 入力ボタンの取得
+        for (int i = 0; i < dic.Count; ++i)
         {
-            return;
-        }
-        if (!isMine)
-        {
-            return;
+            Buttons[i].isTrigger = Input.GetButtonDown(dic[i]);
+            Buttons[i].isPress = Input.GetButton(dic[i]);
+            Buttons[i].isRelease = Input.GetButtonUp(dic[i]);
         }
 
         animatorStateInfoBase = animator.GetCurrentAnimatorStateInfo(0);
         animatorStateInfoCarry = animator.GetCurrentAnimatorStateInfo(1);
-
-        float h = Input.GetAxis("Horizontal");              // 入力デバイスの水平軸をhで定義
-        float v = Input.GetAxis("Vertical");                // 入力デバイスの垂直軸をvで定義
-
-        // 以下、キャラクターの移動処理
-        velocity = new Vector3(0, 0, v * 3);        // 上下のキー入力からZ軸方向の移動量を取得
-                                                    // キャラクターのローカル空間での方向に変換
-        velocity = transform.TransformDirection(velocity);
-
-
-        // 上下のキー入力でキャラクターを移動させる
-        transform.localPosition += velocity * Time.fixedDeltaTime;
-
-        // 左右のキー入力でキャラクタをY軸で旋回させる
-        transform.Rotate(0, h * 2, 0);
-
-
-        //rb.AddForce(10 * Physics.gravity, ForceMode.Acceleration);
-        //transform.Translate(transform.forward * Time.fixedDeltaTime);
-
 
         // ここからアニメーション関係
         string animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
@@ -139,14 +129,21 @@ public class PlayerController : MonoBehaviour
             animator.SetTrigger("Run");
         }
 
-        else if (animName == "Running" && v < 0.1f && !animator.IsInTransition(0))
+        else if (animName == "Idle" && v < -0.1f && !animator.IsInTransition(0))
+        {
+            animator.SetTrigger("Back");
+        }
+
+        else if ((animName == "Running" || animName == "Walking") && Mathf.Abs(v) < 0.1f && !animator.IsInTransition(0))
         {
             animator.SetTrigger("Idle");
         }
 
         animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
 
-        if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.X))
+
+        // カプセルを取るor投げる
+        if (Buttons[0].isTrigger)
         {
             if (isCarry)
             {
@@ -165,7 +162,8 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.F)) && animName == "Idle")
+        // 殴る
+        if (Buttons[1].isTrigger)
         {
             animator.SetTrigger("Punch");
             if (enemy)
@@ -173,6 +171,40 @@ public class PlayerController : MonoBehaviour
                 enemy.GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All);
             }
         }
+    }
+
+    private void FixedUpdate()
+    {
+        if (!rb)
+        {
+            return;
+        }
+        if (!isMine)
+        {
+            return;
+        }
+
+
+
+
+        // 以下、キャラクターの移動処理
+        velocity = new Vector3(0, 0, v * 3);        // 上下のキー入力からZ軸方向の移動量を取得
+                                                    // キャラクターのローカル空間での方向に変換
+        velocity = transform.TransformDirection(velocity);
+
+
+        // 上下のキー入力でキャラクターを移動させる
+        transform.localPosition += velocity * Time.fixedDeltaTime;
+
+        // 左右のキー入力でキャラクタをY軸で旋回させる
+        transform.Rotate(0, h * 2, 0);
+
+
+        //rb.AddForce(10 * Physics.gravity, ForceMode.Acceleration);
+        //transform.Translate(transform.forward * Time.fixedDeltaTime);
+
+
+
 
 
 

@@ -1694,6 +1694,7 @@ MonoBehaviour:
   Panel: {fileID: 1746727472}
   status: {fileID: 2127338971}
   statusNum: {fileID: 727388125}
+  MasterServerAdd: 13.115.132.120
 --- !u!114 &911284287
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3168,7 +3169,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1600375339}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.298082, y: 7.4397497, z: -4.9813814}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
