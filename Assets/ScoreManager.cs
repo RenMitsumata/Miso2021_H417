@@ -46,4 +46,27 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    public void DecreaseScore(CapsuleObject.Belong_State team)
+    {
+        switch (team)
+        {
+            case CapsuleObject.Belong_State.Red:
+                Red.SubScore();
+                break;
+
+            case CapsuleObject.Belong_State.Green:
+                Green.SubScore();
+                break;
+
+
+            case CapsuleObject.Belong_State.Blue:
+                Blue.SubScore();
+                break;
+
+            case CapsuleObject.Belong_State.Yellow:
+                Yellow.SubScore();
+                break;
+
+        }
+    }
 }

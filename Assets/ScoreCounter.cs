@@ -42,7 +42,12 @@ public class ScoreCounter : MonoBehaviour
     {
         if (other.tag == "Capsule")
         {
-
+            other.GetComponent<CapsuleObject>().state = myteam;
+            int num = other.GetComponent<CapsuleObject>().score;
+            for (int i = 0; i < num; i++)
+            {
+                scrMgr.DecreaseScore(myteam);
+            }
         }
     }
 

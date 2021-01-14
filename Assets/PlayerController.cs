@@ -27,12 +27,15 @@ public class PlayerController : MonoBehaviour
     private bool isCarry = false;
     private bool isMine = false;
 
-    public float forwardSpeed;
-    public float backwardSpeed;
-    public float rotateSpeed;
+    [SerializeField]
+    private float jumpPow = 9.8f;
+
     private float h;
     private float v;
     private Vector3 velocity;
+    private bool isJumping = false;
+    private bool isFalling = false;
+    private bool isLanding = false;
     private ButtonStatus[] Buttons;
 
     private Animator animator;
@@ -104,6 +107,12 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!isMine)
+        {
+            return;
+        }
+
+
         // 入力軸の取得
         h = Input.GetAxis("Horizontal");              // 入力デバイスの水平軸をhで定義
         v = Input.GetAxis("Vertical");                // 入力デバイスの垂直軸をvで定義
@@ -120,23 +129,31 @@ public class PlayerController : MonoBehaviour
         animatorStateInfoCarry = animator.GetCurrentAnimatorStateInfo(1);
 
         // ここからアニメーション関係
+
+        // トリガー用変数をリセット
+        animator.SetBool("Run", false);
+        animator.SetBool("Back", false);
+        animator.SetBool("Idle", false);
+        animator.SetBool("Punch", false);
+
+
         string animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
 
         Debug.Log(animName);
 
         if (animName == "Idle" && v > 0.1f && !animator.IsInTransition(0))
         {
-            animator.SetTrigger("Run");
+            animator.SetBool("Run", true);
         }
 
         else if (animName == "Idle" && v < -0.1f && !animator.IsInTransition(0))
         {
-            animator.SetTrigger("Back");
+            animator.SetBool("Back", true);
         }
 
         else if ((animName == "Running" || animName == "Walking") && Mathf.Abs(v) < 0.1f && !animator.IsInTransition(0))
         {
-            animator.SetTrigger("Idle");
+            animator.SetBool("Idle", true);
         }
 
         animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
@@ -165,10 +182,11 @@ public class PlayerController : MonoBehaviour
         // 殴る
         if (Buttons[1].isTrigger)
         {
-            animator.SetTrigger("Punch");
+            animator.SetBool("Punch", true);
             if (enemy)
             {
                 enemy.GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All);
+
             }
         }
     }
@@ -188,8 +206,14 @@ public class PlayerController : MonoBehaviour
 
 
         // 以下、キャラクターの移動処理
+        if (v < 0.0f)
+        {
+            v *= 0.5f;
+        }
         velocity = new Vector3(0, 0, v * 3);        // 上下のキー入力からZ軸方向の移動量を取得
-                                                    // キャラクターのローカル空間での方向に変換
+
+
+        // キャラクターのローカル空間での方向に変換
         velocity = transform.TransformDirection(velocity);
 
 
@@ -204,13 +228,36 @@ public class PlayerController : MonoBehaviour
         //transform.Translate(transform.forward * Time.fixedDeltaTime);
 
 
+        // ジャンプボタンが押されたら
 
 
+        if (Buttons[2].isTrigger && !isJumping)
+        {
+            if (Mathf.Abs(rb.velocity.y) < 0.3f)
+            {
+                rb.AddForce(new Vector3(0.0f, jumpPow * 30, 0.0f), ForceMode.Acceleration);
+                isJumping = true;
+                animator.SetTrigger("Jump");
+            }
+            return;
+        }
 
 
+        if (rb.velocity.y < -0.2f && !isFalling)
+        {
+            isFalling = true;
+            return;
 
+        }
+
+        if (isFalling && Mathf.Abs(rb.velocity.y) < 0.0001f)
+        {
+
+            isFalling = false;
+            animator.SetTrigger("Landing");
+            isJumping = false;
+        }
     }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (isCarry)
@@ -223,6 +270,10 @@ public class PlayerController : MonoBehaviour
             curCapsule = collision.gameObject;
         }
 
+        if (collision.transform.tag == "Stage")
+        {
+            isLanding = true;
+        }
 
     }
 
@@ -231,6 +282,10 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject == curCapsule && !isCarry)
         {
             curCapsule = null;
+        }
+        if (collision.transform.tag == "Stage")
+        {
+            isLanding = false;
         }
 
     }

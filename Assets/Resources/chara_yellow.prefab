@@ -1623,7 +1623,7 @@ GameObject:
   - component: {fileID: 1249405636917996082}
   m_Layer: 0
   m_Name: chara_yellow
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1682,10 +1682,9 @@ MonoBehaviour:
   dic:
   - Catch
   - Fight
+  - Jump
   Capsulepos: {fileID: 1916463044065578833}
-  forwardSpeed: 0
-  backwardSpeed: 0
-  rotateSpeed: 0
+  jumpPow: 9.8
 --- !u!114 &1179275458764792190
 MonoBehaviour:
   m_ObjectHideFlags: 0

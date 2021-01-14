@@ -1686,7 +1686,7 @@ GameObject:
   - component: {fileID: 6064037751782174012}
   m_Layer: 0
   m_Name: chara_blue
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1745,10 +1745,9 @@ MonoBehaviour:
   dic:
   - Catch
   - Fight
+  - Jump
   Capsulepos: {fileID: 77666977937538639}
-  forwardSpeed: 0
-  backwardSpeed: 0
-  rotateSpeed: 0
+  jumpPow: 9.8
 --- !u!114 &6565481654900406705
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1805,27 +1804,30 @@ MonoBehaviour:
   ShowParameterInspector: 1
   m_SynchronizeParameters:
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Jump
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Walk
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Idle
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Run
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Carry
   - Type: 9
-    SynchronizeType: 0
+    SynchronizeType: 2
     Name: Punch
+  - Type: 9
+    SynchronizeType: 2
+    Name: Back
   m_SynchronizeLayers:
-  - SynchronizeType: 0
+  - SynchronizeType: 2
     LayerIndex: 0
-  - SynchronizeType: 0
+  - SynchronizeType: 2
     LayerIndex: 1
 --- !u!136 &8359767286541945897
 CapsuleCollider:
