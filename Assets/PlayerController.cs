@@ -42,6 +42,9 @@ public class PlayerController : MonoBehaviour
     private AnimatorStateInfo animatorStateInfoBase;
     private AnimatorStateInfo animatorStateInfoCarry;
     private Rigidbody rb;
+    private AudioSource audioSource;
+    private SoundManager sm;
+    private int hitTimer = -1;
 
     [PunRPC]
     public void CatchCapsule()
@@ -66,11 +69,14 @@ public class PlayerController : MonoBehaviour
         isCarry = true;
         animator.SetBool("Carry", true);
         animator.SetLayerWeight(1, 0.5f);
+        AudioClip ac = sm.GetAudioClip("Pick");    // SoundManagerから鳴らしたいAudioClipを取得
+        audioSource.clip = ac;                      // AudioSourceに鳴らしたいAudioClipをセット
+        audioSource.Play();                         // 再生
     }
 
 
     [PunRPC]
-    public void ThrowCapsule()
+    public void ThrowCapsule(bool isSmashed)
     {
         if (!isCarry)
         {
@@ -90,6 +96,13 @@ public class PlayerController : MonoBehaviour
         curCapsule = null;
         animator.SetBool("Carry", false);
         animator.SetLayerWeight(1, 1.0f);
+        if (!isSmashed)
+        {
+            AudioClip ac = sm.GetAudioClip("Throw");    // SoundManagerから鳴らしたいAudioClipを取得
+            audioSource.clip = ac;                      // AudioSourceに鳴らしたいAudioClipをセット
+            audioSource.Play();                         // 再生
+        }
+
     }
 
 
@@ -102,6 +115,8 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         Buttons = new ButtonStatus[dic.Count];
+        audioSource = GetComponent<AudioSource>();
+        sm = GameObject.Find("SoundManager").GetComponent<SoundManager>();
     }
 
     // Update is called once per frame
@@ -111,6 +126,7 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
+
 
 
         // 入力軸の取得
@@ -158,13 +174,12 @@ public class PlayerController : MonoBehaviour
 
         animName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
 
-
         // カプセルを取るor投げる
         if (Buttons[0].isTrigger)
         {
             if (isCarry)
             {
-                GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All);
+                GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All, false);
 
             }
             else
@@ -180,15 +195,56 @@ public class PlayerController : MonoBehaviour
         }
 
         // 殴る
-        if (Buttons[1].isTrigger)
+        if (Buttons[1].isTrigger && !animator.GetCurrentAnimatorStateInfo(1).IsName("Punch") && !animator.IsInTransition(1) && !isCarry)
         {
             animator.SetBool("Punch", true);
+
+            // 音を鳴らす
+            AudioClip ac = sm.GetAudioClip("Punch");    // SoundManagerから鳴らしたいAudioClipを取得
+            audioSource.clip = ac;                      // AudioSourceに鳴らしたいAudioClipをセット
+            audioSource.Play();                         // 再生
+
             if (enemy)
             {
-                enemy.GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All);
+                hitTimer = 30;
 
             }
         }
+
+        if (hitTimer > 0)
+        {
+            hitTimer--;
+            if (hitTimer == 0)
+            {
+                AudioClip acHit = sm.GetAudioClip("Hit");   // SoundManagerから鳴らしたいAudioClipを取得
+                audioSource.clip = acHit;                   // AudioSourceに鳴らしたいAudioClipをセット
+                audioSource.Play();                         // 再生
+                enemy.GetComponent<PhotonView>().RPC("ThrowCapsule", RpcTarget.All, true);
+                hitTimer = -1;
+            }
+        }
+
+        // ジャンプ
+        if (Buttons[2].isTrigger && !isJumping)
+        {
+            if (Mathf.Abs(rb.velocity.y) < 0.3f)
+            {
+                rb.AddForce(new Vector3(0.0f, jumpPow * 30, 0.0f), ForceMode.Acceleration);
+                isJumping = true;
+                //animator.SetBool("Landing", false);
+                animator.SetBool("Jump", true);
+                AudioClip acHit = sm.GetAudioClip("Jump");   // SoundManagerから鳴らしたいAudioClipを取得
+                audioSource.clip = acHit;                   // AudioSourceに鳴らしたいAudioClipをセット
+                audioSource.Play();                         // 再生
+            }
+            return;
+        }
+
+
+
+
+
+
     }
 
     private void FixedUpdate()
@@ -228,24 +284,14 @@ public class PlayerController : MonoBehaviour
         //transform.Translate(transform.forward * Time.fixedDeltaTime);
 
 
+
         // ジャンプボタンが押されたら
-
-
-        if (Buttons[2].isTrigger && !isJumping)
+        if (rb.velocity.y < -0.2f && !isFalling && isJumping)
         {
-            if (Mathf.Abs(rb.velocity.y) < 0.3f)
-            {
-                rb.AddForce(new Vector3(0.0f, jumpPow * 30, 0.0f), ForceMode.Acceleration);
-                isJumping = true;
-                animator.SetTrigger("Jump");
-            }
-            return;
-        }
 
-
-        if (rb.velocity.y < -0.2f && !isFalling)
-        {
+            //animator.SetBool("Landing", true);
             isFalling = true;
+
             return;
 
         }
@@ -254,9 +300,18 @@ public class PlayerController : MonoBehaviour
         {
 
             isFalling = false;
-            animator.SetTrigger("Landing");
+
             isJumping = false;
+            animator.SetBool("Jump", false);
+            AudioClip acHit = sm.GetAudioClip("Landing");   // SoundManagerから鳴らしたいAudioClipを取得
+            audioSource.clip = acHit;                       // AudioSourceに鳴らしたいAudioClipをセット
+            audioSource.Play();                             // 再生
+
         }
+
+
+
+
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -300,7 +355,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject == enemy)
+        if (other.gameObject == enemy && hitTimer < 0)
         {
             enemy = null;
         }
